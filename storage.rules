@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /assets/{userId}/{fileId} {
+      // Only owner can upload and delete
+      allow write, delete: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow read if user is the owner OR has a valid access_grant
+      // We check for a grant document in Firestore where the ID is (userId + '_' + blockId)
+      allow read: if request.auth != null && (
+        request.auth.uid == userId ||
+        firestore.exists(/databases/(default)/documents/access_grants/$(request.auth.uid + "_" + resource.metadata.blockId))
+      );
+    }
+    
+    // Profile images (avatars, covers)
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
