@@ -92,74 +92,76 @@ export function useChat({ conversationId, currentUserId }: ChatOptions) {
     if (!conversationId || !sharedKey || !auth.currentUser) return
 
     // Soft delete logic: only fetch messages that haven't expired
-    // Note: This query requires a composite index in Firestore
-    // If it fails, we fall back to client-side filtering
-    const now = Timestamp.now()
-    const q = query(
-      collection(db, "conversations", conversationId, "messages"),
-      where("expiresAt", "==", null), // Non-expiring messages
-      orderBy("timestamp", "asc")
-    )
-
-    const qExpiring = query(
-      collection(db, "conversations", conversationId, "messages"),
-      where("expiresAt", ">", now), // Not yet expired
-      orderBy("expiresAt", "asc")
-    )
-
-    // Combined listener or just fetch all and filter client-side to be safe with indexes
+    // Note: We fetch all messages and filter client-side because of E2EE constraints
+    // and to handle the billing-disabled Firestore TTL scenario.
     const qAll = query(
       collection(db, "conversations", conversationId, "messages"),
       orderBy("timestamp", "asc")
     )
 
     const unsubscribe = onSnapshot(qAll, async (snapshot) => {
-      const currentNow = Date.now()
+      const now = Date.now()
       const msgsData = await Promise.all(snapshot.docs.map(async (d) => {
-        const data = d.data() as Message
+        const data = d.data()
         
-        // Filter out expired messages
-        if (data.expiresAt && data.expiresAt.toMillis() < currentNow) {
-          // Cleanup: delete expired messages from the sender's side
+        // Skip and cleanup expired messages
+        if (data.expiresAt && data.expiresAt.toMillis() < now) {
           if (data.senderId === currentUserId) {
-            deleteDoc(d.ref).catch(console.error)
+            deleteDoc(d.ref).catch(() => {}) // Silent cleanup
           }
           return null
         }
 
         let decryptedContent = "🔒 [Encrypted Message]"
         try {
-          const encrypted = JSON.parse(data.content)
-          decryptedContent = await decryptContent(encrypted, sharedKey)
+          if (data.content && data.iv) {
+            // New schema: content and iv are top-level
+            decryptedContent = await decryptContent({
+              encryptedContent: data.content,
+              iv: data.iv
+            }, sharedKey)
+          } else if (data.content && data.content.startsWith("{")) {
+            // Legacy schema: nested in JSON
+            const encrypted = JSON.parse(data.content)
+            decryptedContent = await decryptContent(encrypted, sharedKey)
+          }
         } catch (e) {
-          // Decryption failed
+          console.warn("Decryption failed for message:", d.id, e)
         }
 
         return {
           id: d.id,
-          ...data,
+          senderId: data.senderId,
+          content: data.content,
+          type: data.type,
+          timestamp: data.createdAt || data.timestamp, // Support both for transition
+          expiresAt: data.expiresAt,
           decryptedContent
         }
       }))
 
-      setMessages(msgsData.filter(m => m !== null) as Message[])
+      setMessages(msgsData.filter((m): m is any => m !== null))
+      setIsLoading(false)
+    }, (error) => {
+      console.error("Messages listener error:", error)
       setIsLoading(false)
     })
 
-    // Setup a timer to re-check expiration every 10 seconds if there are expiring messages
+    // Immediate interval to clear expired messages from UI state between snapshots
     const expirationCheckInterval = setInterval(() => {
-      setMessages(prev => prev.filter(m => !m.expiresAt || m.expiresAt.toMillis() > Date.now()))
-    }, 10000)
+      const now = Date.now()
+      setMessages(prev => prev.filter(m => !m.expiresAt || m.expiresAt.toMillis() > now))
+    }, 5000)
 
     return () => {
       unsubscribe()
       clearInterval(expirationCheckInterval)
     }
-  }, [conversationId, sharedKey])
+  }, [conversationId, sharedKey, currentUserId])
 
   // 3. Listen for Presence (Typing Indicators)
   useEffect(() => {
-    if (!conversationId) return
+    if (!conversationId || !sharedKey) return
 
     const q = query(collection(db, "conversations", conversationId, "presence"))
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -172,10 +174,12 @@ export function useChat({ conversationId, currentUserId }: ChatOptions) {
         }
       })
       setTypingUsers(users)
+    }, (error) => {
+      console.error("Presence listener error:", error)
     })
 
     return () => unsubscribe()
-  }, [conversationId, currentUserId])
+  }, [conversationId, currentUserId, sharedKey])
 
   const sendMessage = useCallback(async (text: string, type: "text" | "image" | "file" = "text", burnAfter?: number) => {
     if (!sharedKey || !conversationId) return
@@ -184,11 +188,13 @@ export function useChat({ conversationId, currentUserId }: ChatOptions) {
       const encrypted = await encryptContent(text, sharedKey)
       const expiresAt = burnAfter ? Timestamp.fromMillis(Date.now() + burnAfter * 1000) : null
 
+      // Matches firestore.rules: content, iv, senderId, createdAt
       await addDoc(collection(db, "conversations", conversationId, "messages"), {
         senderId: currentUserId,
-        content: JSON.stringify(encrypted),
+        content: encrypted.encryptedContent,
+        iv: encrypted.iv,
         type,
-        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp(),
         expiresAt
       })
 

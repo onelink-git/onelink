@@ -32,16 +32,33 @@ export default function SignUpPage() {
     setError(null)
 
     try {
-      // Validate nickname format
-      if (!/^[a-zA-Z0-9_-]+$/.test(nickname)) {
-        throw new Error("Nickname can only contain letters, numbers, underscores, and hyphens")
+      // 1. Validate nickname format
+      const normalizedNickname = nickname.toLowerCase().trim()
+      if (!/^[a-z0-9_]{3,20}$/.test(normalizedNickname)) {
+        throw new Error("Nickname must be 3-20 characters and only contain lowercase letters, numbers, and underscores")
       }
 
-      // Check if nickname is taken (in real app, use a query or better yet, a dedicated collection for unique nicknames)
-      // For now, we'll try to create the doc and let security rules or index handle it
+      // 2. Map nickname to internal email
+      const internalEmail = `${normalizedNickname}@onelink.internal`
       
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      // 3. Check if nickname is taken via the 'nicknames' collection
+      const nicknameRef = doc(db, "nicknames", normalizedNickname)
+      const nicknameSnap = await getDoc(nicknameRef)
+      
+      if (nicknameSnap.exists()) {
+        throw new Error("This nickname is already taken")
+      }
+
+      // 4. Create Firebase Auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, internalEmail, password)
       const user = userCredential.user
+
+      // 5. Atomic-like initialization of profile data
+      // We use the UID to link them
+      await setDoc(nicknameRef, {
+        uid: user.uid,
+        created_at: new Date().toISOString()
+      })
 
       // Update Firebase Auth profile
       await updateProfile(user, {
@@ -51,16 +68,28 @@ export default function SignUpPage() {
       // Initialize Firestore user document
       await setDoc(doc(db, "users", user.uid), {
         id: user.uid,
-        email: email,
-        nickname: nickname.toLowerCase(),
+        nickname: normalizedNickname,
         display_name: displayName,
+        authLevel: 1, // Level 1 - Minimal (MVP default)
         bio: "",
         avatar_url: "",
         cover_photo: "",
         public_key: null,
         theme_config: {},
+        recovery: {
+          email: email || null, // Optional Level 2 recovery email
+          two_factor_enabled: false
+        },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+      })
+
+      // Public profile document
+      await setDoc(doc(db, "profiles", normalizedNickname), {
+        uid: user.uid,
+        display_name: displayName,
+        nickname: normalizedNickname,
+        updated_at: new Date().toISOString()
       })
 
       // Initialize empty vault
@@ -75,7 +104,11 @@ export default function SignUpPage() {
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Sign up error:", error)
-      setError(error.message || "An error occurred during sign up")
+      let message = error.message || "An error occurred during sign up"
+      if (error.code === "auth/email-already-in-use") {
+        message = "This nickname is already registered."
+      }
+      setError(message)
     } finally {
       setIsLoading(false)
     }
@@ -103,24 +136,24 @@ export default function SignUpPage() {
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nickname">Username</Label>
+                <Label htmlFor="nickname">Nickname (Identifier)</Label>
                 <Input
                   id="nickname"
                   type="text"
-                  placeholder="yourname"
+                  placeholder="bobsby23"
                   required
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value.toLowerCase())}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">Your profile: onelink.app/u/{nickname || "yourname"}</p>
+                <p className="text-xs text-muted-foreground">Used for login and your profile: onelink.app/u/{nickname || "..."}</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
+                <Label htmlFor="displayName">Display Name (Public)</Label>
                 <Input
                   id="displayName"
                   type="text"
-                  placeholder="Your Name"
+                  placeholder="Bob Smith"
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -128,12 +161,11 @@ export default function SignUpPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Recovery Email (Optional)</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
-                  required
+                  placeholder="you@example.com (for account recovery)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -145,13 +177,14 @@ export default function SignUpPage() {
                   id="password"
                   type="password"
                   required
-                  minLength={6}
+                  minLength={10}
+                  placeholder="Min. 10 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && <p className="text-sm text-destructive font-medium">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>

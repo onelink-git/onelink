@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
+  const [nickname, setNickname] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -26,7 +26,10 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const normalizedNickname = nickname.toLowerCase().trim()
+      const internalEmail = `${normalizedNickname}@onelink.internal`
+      
+      const userCredential = await signInWithEmailAndPassword(auth, internalEmail, password)
       const token = await userCredential.user.getIdToken()
       
       // Set session cookie (simple client-side cookie for demo, 
@@ -36,7 +39,13 @@ export default function LoginPage() {
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Login error:", error)
-      setError(error.message || "Invalid email or password")
+      let message = "Invalid nickname or password"
+      if (error.code === "auth/user-not-found") {
+        message = "No account found with this nickname."
+      } else if (error.code === "auth/wrong-password") {
+        message = "Incorrect password."
+      }
+      setError(message)
     } finally {
       setIsLoading(false)
     }
@@ -59,19 +68,19 @@ export default function LoginPage() {
         <Card className="border-2">
           <CardHeader className="space-y-1">
             <CardTitle className="text-xl">Sign in</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+            <CardDescription>Enter your nickname and password</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="nickname">Nickname</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
+                  id="nickname"
+                  type="text"
+                  placeholder="bobsby23"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
@@ -81,12 +90,13 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   required
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && <p className="text-sm text-destructive font-medium">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>

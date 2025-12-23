@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react"
 import { auth, db } from "@/lib/firebase/client"
-import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore"
 import { generateKeyPair, storePrivateKey, getPrivateKey } from "@/lib/crypto"
 
 export function useRSAKeyCheck() {
   const [isChecking, setIsChecking] = useState(true)
+  const [needsRecovery, setNeedsRecovery] = useState(false)
+  const [hasKeys, setHasKeys] = useState(false)
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (!user) {
         setIsChecking(false)
+        setHasKeys(false)
         return
       }
 
@@ -35,13 +38,22 @@ export function useRSAKeyCheck() {
           await storePrivateKey(user.uid, keys.privateKey)
           await updateDoc(doc(db, "users", user.uid), {
             public_key: keys.publicKey,
-            updated_at: new Date().toISOString()
+            updatedAt: serverTimestamp()
           })
           console.log("New RSA keys generated and stored.")
-        }
+          setHasKeys(true)
+        } 
         // Case 2: Local key missing but server has public key
-        // We can't do much automatically here without the vault passphrase,
-        // so we let the existing UI alerts handle prompting the user to recover.
+        else if (!localKey && serverPublicKey) {
+          console.warn("Server has public key but local private key is missing.")
+          setNeedsRecovery(true)
+          setHasKeys(false)
+        }
+        // Case 3: Both exist
+        else if (localKey && serverPublicKey) {
+          setHasKeys(true)
+          setNeedsRecovery(false)
+        }
         
       } catch (error) {
         console.error("Error during RSA key check:", error)
@@ -53,5 +65,5 @@ export function useRSAKeyCheck() {
     return () => unsubscribe()
   }, [])
 
-  return { isChecking }
+  return { isChecking, needsRecovery, hasKeys }
 }

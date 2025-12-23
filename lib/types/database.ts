@@ -1,57 +1,44 @@
 // Database type definitions for OneLink
 
+import { Timestamp } from "firebase/firestore"
+
 export interface User {
   id: string
   email: string
   nickname: string
-  display_name: string
-  bio: string | null
-  avatar_url: string | null
-  cover_photo: string | null
+  displayName?: string
+  bio?: string
+  avatarUrl?: string
+  coverPhoto?: string
   public_key: string | null
-  theme_config: Record<string, any>
-  created_at: string
-  updated_at: string
+  themeConfig?: Record<string, any>
+  createdAt: Timestamp
+  updatedAt: Timestamp
 }
 
-export interface LinkBlock {
+export interface Conversation {
   id: string
-  user_id: string
-  type: "link" | "social" | "contact" | "file" | "note"
-  title: string
-  url: string | null
-  icon: string | null
-  visibility: "public" | "friends" | "private"
-  encrypted_blob: string | null
-  position: number
-  size: "sm" | "md" | "lg" | "xl" // Bento sizes
-  style_config: Record<string, any> // Custom styles for individual blocks
-  is_active: boolean
-  click_count: number
-  created_at: string
-  updated_at: string
-}
-
-export interface Connection {
-  id: string
-  requester_id: string
-  receiver_id: string
-  status: "pending" | "accepted" | "rejected" | "blocked"
-  shared_key: string | null
-  created_at: string
-  updated_at: string
+  participantIds: string[]
+  encryptedKeys: Record<string, string> // uid -> encrypted AES key
+  lastMessage?: string
+  updatedAt: Timestamp
+  created_at?: string // Legacy support
 }
 
 export interface Message {
   id: string
-  connection_id: string
-  sender_id: string
-  receiver_id: string
-  content: string
-  encrypted: boolean
-  read: boolean
-  created_at: string
-  updated_at: string
+  senderId: string
+  content: string // The ciphertext
+  iv: string // Top-level IV for security rules
+  type: "text" | "image" | "file"
+  createdAt: Timestamp
+  expiresAt?: Timestamp | null
+}
+
+export interface Presence {
+  isTyping: boolean
+  displayName: string
+  lastUpdated: Timestamp
 }
 
 export type VisibilityLevel = "public" | "friends" | "private"
