@@ -4,7 +4,7 @@ import type React from "react"
 
 import { auth, db } from "@/lib/firebase/client"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -57,7 +57,7 @@ export default function SignUpPage() {
       // We use the UID to link them
       await setDoc(nicknameRef, {
         uid: user.uid,
-        created_at: new Date().toISOString()
+        createdAt: serverTimestamp()
       })
 
       // Update Firebase Auth profile
@@ -69,33 +69,33 @@ export default function SignUpPage() {
       await setDoc(doc(db, "users", user.uid), {
         id: user.uid,
         nickname: normalizedNickname,
-        display_name: displayName,
+        displayName: displayName,
         authLevel: 1, // Level 1 - Minimal (MVP default)
         bio: "",
-        avatar_url: "",
-        cover_photo: "",
+        avatarUrl: "",
+        coverPhoto: "",
         public_key: null,
-        theme_config: {},
+        themeConfig: {},
         recovery: {
           email: email || null, // Optional Level 2 recovery email
-          two_factor_enabled: false
+          twoFactorEnabled: false
         },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       })
 
       // Public profile document
       await setDoc(doc(db, "profiles", normalizedNickname), {
         uid: user.uid,
-        display_name: displayName,
+        displayName: displayName,
         nickname: normalizedNickname,
-        updated_at: new Date().toISOString()
+        updatedAt: serverTimestamp()
       })
 
       // Initialize empty vault
       await setDoc(doc(db, "users", user.uid, "vault", "keys"), {
-        key_vault: null,
-        updated_at: new Date().toISOString()
+        keyVault: null,
+        updatedAt: serverTimestamp()
       })
 
       const token = await user.getIdToken()

@@ -78,8 +78,8 @@ export function SearchUsers({ currentUserId }: SearchUsersProps) {
         requester_id: currentUserId,
         receiver_id: userId,
         status: "pending",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
 
       setResults(results.map((user) => (user.id === userId ? { ...user, connectionStatus: "pending" } : user)))
@@ -114,12 +114,12 @@ export function SearchUsers({ currentUserId }: SearchUsersProps) {
             <Card key={user.id}>
               <CardContent className="flex items-center gap-4 p-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={user.avatar_url || undefined} alt={user.display_name} />
-                  <AvatarFallback>{user.display_name?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                  <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName} />
+                  <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium truncate">{user.display_name}</h3>
+                  <h3 className="font-medium truncate">{user.displayName}</h3>
                   <p className="text-sm text-muted-foreground">@{user.nickname}</p>
                   {user.bio && <p className="text-sm text-muted-foreground truncate mt-1">{user.bio}</p>}
                 </div>

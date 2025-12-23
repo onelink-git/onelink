@@ -107,7 +107,7 @@ export function EditLinkDialog({ link, open, onOpenChange, onUpdate }: EditLinkD
         visibility: formData.visibility,
         icon: formData.icon || null,
         encrypted_blob: encryptedBlob,
-        updated_at: new Date().toISOString()
+        updatedAt: serverTimestamp()
       }
       
       await updateDoc(linkRef, updateData)

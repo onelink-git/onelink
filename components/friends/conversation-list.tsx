@@ -16,9 +16,9 @@ interface Conversation {
   updatedAt: any
   friendData?: {
     id: string
-    display_name: string
+    displayName: string
     nickname: string
-    avatar_url: string
+    avatarUrl: string
   }
 }
 
@@ -56,9 +56,9 @@ export function ConversationList({ currentUserId, onSelectChat, selectedChatId }
             const fd = friendDoc.data()
             friendData = {
               id: friendId,
-              display_name: fd.display_name,
+              displayName: fd.displayName,
               nickname: fd.nickname,
-              avatar_url: fd.avatar_url
+              avatarUrl: fd.avatarUrl
             }
           }
         }
@@ -110,8 +110,8 @@ export function ConversationList({ currentUserId, onSelectChat, selectedChatId }
     <div className="space-y-2">
       {conversations.map((conv) => {
         const isGroup = conv.type === "group"
-        const displayName = isGroup ? conv.name : (conv.friendData?.display_name || 'Unknown User')
-        const avatarUrl = isGroup ? undefined : conv.friendData?.avatar_url
+        const displayName = isGroup ? conv.name : (conv.friendData?.displayName || 'Unknown User')
+        const avatarUrl = isGroup ? undefined : conv.friendData?.avatarUrl
 
         return (
           <Card 

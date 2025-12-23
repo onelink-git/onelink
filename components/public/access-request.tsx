@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { auth, db } from "@/lib/firebase/client"
-import { collection, addDoc, query, where, getDocs, doc, getDoc } from "firebase/firestore"
+import { collection, addDoc, query, where, getDocs, doc, getDoc, serverTimestamp } from "firebase/firestore"
 import { Button } from "@/components/ui/button"
 import { Shield, Loader2, CheckCircle2 } from "lucide-react"
 import { useCrypto } from "@/hooks/use-crypto"
@@ -67,7 +67,7 @@ export function AccessRequest({ blockId, ownerId, onSuccess }: AccessRequestProp
         requester_id: user.uid,
         requester_public_key: publicKey,
         status: 'pending',
-        created_at: new Date().toISOString()
+        createdAt: serverTimestamp()
       })
 
       setStatus('pending')

@@ -41,6 +41,20 @@ export interface Presence {
   lastUpdated: Timestamp
 }
 
+export interface Nickname {
+  uid: string
+  createdAt: Timestamp
+}
+
+export interface Profile {
+  uid: string
+  nickname: string
+  displayName: string
+  bio?: string
+  avatarUrl?: string
+  updatedAt: Timestamp
+}
+
 export type VisibilityLevel = "public" | "friends" | "private"
 export type LinkBlockType = "link" | "social" | "contact" | "file" | "note"
 export type ConnectionStatus = "pending" | "accepted" | "rejected" | "blocked"

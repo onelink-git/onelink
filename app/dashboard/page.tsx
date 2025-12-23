@@ -95,7 +95,7 @@ export default function DashboardPage() {
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight">Welcome back, {profile.display_name.split(" ")[0]}!</h1>
+            <h1 className="text-4xl font-bold tracking-tight">Welcome back, {profile.displayName?.split(" ")[0] || 'User'}!</h1>
             <p className="mt-2 text-muted-foreground">Here's an overview of your OneLink profile</p>
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                   <div key={link.id} className="flex items-center justify-between rounded-lg border p-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{link.title}</p>
-                      <p className="text-xs text-muted-foreground">{link.click_count || 0} clicks</p>
+                      <p className="text-xs text-muted-foreground">{link.clickCount || 0} clicks</p>
                     </div>
                     <Button variant="ghost" size="sm" asChild>
                       <Link href="/dashboard/links">Edit</Link>

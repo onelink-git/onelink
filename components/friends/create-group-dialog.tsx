@@ -50,7 +50,7 @@ export function CreateGroupDialog({ open, onOpenChange, friends, currentUserId, 
         const pubKey = userDoc.data()?.public_key
         if (pubKey) {
           const encryptedKey = await encryptKeyWithPublicKey(aesKey, pubKey)
-          keys[uid] = JSON.stringify(encryptedKey)
+          keys[uid] = encryptedKey
         }
       }))
 
@@ -111,10 +111,10 @@ export function CreateGroupDialog({ open, onOpenChange, friends, currentUserId, 
                     />
                     <Label htmlFor={`friend-${data.id}`} className="flex flex-1 items-center gap-3 cursor-pointer">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={data.avatar_url} />
-                        <AvatarFallback>{data.display_name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={data.avatarUrl} />
+                        <AvatarFallback>{data.displayName.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{data.display_name}</span>
+                      <span className="font-medium">{data.displayName}</span>
                     </Label>
                   </div>
                 )

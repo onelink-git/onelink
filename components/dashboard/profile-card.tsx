@@ -27,9 +27,9 @@ export function ProfileCard({ profile }: ProfileCardProps) {
   return (
     <>
       <Card className="overflow-hidden">
-        {profile.cover_photo && (
+        {profile.coverPhoto && (
           <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-500">
-            <img src={profile.cover_photo || "/placeholder.svg"} alt="Cover" className="h-full w-full object-cover" />
+            <img src={profile.coverPhoto || "/placeholder.svg"} alt="Cover" className="h-full w-full object-cover" />
           </div>
         )}
         <CardHeader>
@@ -38,13 +38,13 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         <CardContent>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
-              <AvatarFallback className="text-2xl">{profile.display_name.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarImage src={profile.avatarUrl || undefined} alt={profile.displayName} />
+              <AvatarFallback className="text-2xl">{profile.displayName?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
             </Avatar>
 
             <div className="flex-1 space-y-3">
               <div>
-                <h3 className="text-xl font-semibold">{profile.display_name}</h3>
+                <h3 className="text-xl font-semibold">{profile.displayName}</h3>
                 <p className="text-sm text-muted-foreground">@{profile.nickname}</p>
               </div>
 
@@ -71,7 +71,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         </CardContent>
       </Card>
 
-      <QRCodeDialog open={qrOpen} onOpenChange={setQrOpen} profileUrl={profileUrl} displayName={profile.display_name} />
+      <QRCodeDialog open={qrOpen} onOpenChange={setQrOpen} profileUrl={profileUrl} displayName={profile.displayName || ''} />
     </>
   )
 }

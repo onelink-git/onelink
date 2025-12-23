@@ -40,7 +40,7 @@ export function AccessRequestsManager() {
             id: d.id,
             ...data,
             blockTitle: blockDoc.data()?.title,
-            requesterName: requesterDoc.data()?.display_name,
+            requesterName: requesterDoc.data()?.displayName,
             blockData: blockDoc.data()
           }
         }))

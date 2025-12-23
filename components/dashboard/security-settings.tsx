@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { generateKeyPair, storePrivateKey, getPrivateKey, encryptPrivateKeyForVault, decryptPrivateKeyFromVault } from "@/lib/crypto"
 import { db } from "@/lib/firebase/client"
-import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore"
+import { doc, updateDoc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 
 interface SecuritySettingsProps {
@@ -57,13 +57,13 @@ export function SecuritySettings({ userId, publicKey: initialPublicKey, hasVault
       const userRef = doc(db, "users", userId)
       await updateDoc(userRef, { 
         public_key: keys.publicKey,
-        updated_at: new Date().toISOString()
+        updatedAt: serverTimestamp()
       })
 
       const vaultRef = doc(db, "users", userId, "vault", "keys")
       await setDoc(vaultRef, {
         key_vault: keyVault,
-        updated_at: new Date().toISOString()
+        updatedAt: serverTimestamp()
       }, { merge: true })
 
       setPublicKey(keys.publicKey)

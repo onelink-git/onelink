@@ -4,7 +4,7 @@ import type React from "react"
 
 import type { User } from "@/lib/types/database"
 import { db, storage } from "@/lib/firebase/client"
-import { doc, updateDoc } from "firebase/firestore"
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,10 +27,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
-    display_name: profile.display_name,
+    displayName: profile.displayName,
     bio: profile.bio || "",
-    avatar_url: profile.avatar_url || "",
-    cover_photo: profile.cover_photo || "",
+    avatarUrl: profile.avatarUrl || "",
+    coverPhoto: profile.coverPhoto || "",
   })
 
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -59,9 +59,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       const downloadURL = await getDownloadURL(storageRef)
 
       if (type === "avatar") {
-        setFormData((prev) => ({ ...prev, avatar_url: downloadURL }))
+        setFormData((prev) => ({ ...prev, avatarUrl: downloadURL }))
       } else {
-        setFormData((prev) => ({ ...prev, cover_photo: downloadURL }))
+        setFormData((prev) => ({ ...prev, coverPhoto: downloadURL }))
       }
 
       router.refresh()
@@ -84,11 +84,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     try {
       const userRef = doc(db, "users", profile.id)
       await updateDoc(userRef, {
-        display_name: formData.display_name,
+        displayName: formData.displayName,
         bio: formData.bio || null,
-        avatar_url: formData.avatar_url || null,
-        cover_photo: formData.cover_photo || null,
-        updated_at: new Date().toISOString()
+        avatarUrl: formData.avatarUrl || null,
+        coverPhoto: formData.coverPhoto || null,
+        updatedAt: serverTimestamp()
       })
 
       router.refresh()
@@ -111,10 +111,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           <div className="space-y-2">
             <Label>Cover Photo</Label>
             <div className="relative h-48 rounded-lg border bg-muted overflow-hidden">
-              {formData.cover_photo ? (
+              {formData.coverPhoto ? (
                 <>
                   <img
-                    src={formData.cover_photo || "/placeholder.svg"}
+                    src={formData.coverPhoto || "/placeholder.svg"}
                     alt="Cover"
                     className="h-full w-full object-cover"
                   />
@@ -123,7 +123,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     variant="destructive"
                     size="icon"
                     className="absolute top-2 right-2"
-                    onClick={() => setFormData({ ...formData, cover_photo: "" })}
+                    onClick={() => setFormData({ ...formData, coverPhoto: "" })}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -166,18 +166,18 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={formData.avatar_url || undefined} alt={formData.display_name} />
-              <AvatarFallback className="text-2xl">{formData.display_name.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarImage src={formData.avatarUrl || undefined} alt={formData.displayName} />
+              <AvatarFallback className="text-2xl">{formData.displayName.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-2">
-              <Label htmlFor="avatar_url">Avatar URL</Label>
+              <Label htmlFor="avatarUrl">Avatar URL</Label>
               <div className="flex gap-2">
                 <Input
-                  id="avatar_url"
+                  id="avatarUrl"
                   type="url"
                   placeholder="https://example.com/avatar.jpg"
-                  value={formData.avatar_url}
-                  onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+                  value={formData.avatarUrl}
+                  onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                 />
                 <input
                   ref={avatarInputRef}
@@ -210,11 +210,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="display_name">Display Name</Label>
+            <Label htmlFor="displayName">Display Name</Label>
             <Input
-              id="display_name"
-              value={formData.display_name}
-              onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+              id="displayName"
+              value={formData.displayName}
+              onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
               required
             />
           </div>

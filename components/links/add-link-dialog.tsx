@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { auth, db, storage } from "@/lib/firebase/client"
-import { collection, addDoc, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc } from "firebase/firestore"
+import { collection, addDoc, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { Loader2, Shield, Upload } from "lucide-react"
 import { useState, useRef } from "react"
@@ -124,8 +124,8 @@ export function AddLinkDialog({ open, onOpenChange }: AddLinkDialogProps) {
         encrypted_blob: encryptedBlob,
         is_active: true,
         click_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       })
 
       setFormData({

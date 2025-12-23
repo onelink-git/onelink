@@ -56,7 +56,7 @@ export default function ChatPage() {
   const getActiveChatName = () => {
     if (!selectedChat) return ""
     if (selectedChat.type === "group") return selectedChat.name || "Group Chat"
-    return selectedChat.friendData?.display_name || "Direct Chat"
+    return selectedChat.friendData?.displayName || "Direct Chat"
   }
 
   return (

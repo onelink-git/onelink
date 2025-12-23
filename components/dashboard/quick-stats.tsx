@@ -33,7 +33,7 @@ export function QuickStats({ userId }: QuickStatsProps) {
           where("user_id", "==", userId)
         )
         const clicksSnapshot = await getDocs(clicksQuery)
-        const totalClicks = clicksSnapshot.docs.reduce((sum, doc) => sum + (doc.data().click_count || 0), 0)
+        const totalClicks = clicksSnapshot.docs.reduce((sum, doc) => sum + (doc.data().clickCount || doc.data().click_count || 0), 0)
 
         // Get total friends (requester)
         const connReqQuery = query(

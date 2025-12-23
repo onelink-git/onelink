@@ -92,11 +92,11 @@ export function GroupSettings({ open, onOpenChange, conversationId, currentUserI
                 <div key={user.id} className="flex items-center justify-between p-2 rounded-xl bg-muted/30 border border-transparent hover:border-muted-foreground/10 transition-all">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border shadow-sm">
-                      <AvatarImage src={user.avatar_url} />
-                      <AvatarFallback>{user.display_name?.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={user.avatarUrl} />
+                      <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-bold">{user.display_name}</p>
+                      <p className="text-sm font-bold">{user.displayName}</p>
                       <p className="text-[10px] text-muted-foreground font-mono">@{user.nickname}</p>
                     </div>
                   </div>

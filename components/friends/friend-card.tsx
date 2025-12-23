@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Check, X, Trash2, ExternalLink, MessageCircle } from "lucide-react"
 import { db } from "@/lib/firebase/client"
-import { doc, updateDoc, deleteDoc } from "firebase/firestore"
+import { doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import Link from "next/link"
@@ -31,7 +31,7 @@ export function FriendCard({ connection, currentUserId, type, onChat }: FriendCa
       const connRef = doc(db, "connections", connection.id)
       await updateDoc(connRef, { 
         status: "accepted",
-        updated_at: new Date().toISOString()
+        updatedAt: serverTimestamp()
       })
       router.refresh()
     } catch (error) {
@@ -46,7 +46,7 @@ export function FriendCard({ connection, currentUserId, type, onChat }: FriendCa
       const connRef = doc(db, "connections", connection.id)
       await updateDoc(connRef, { 
         status: "rejected",
-        updated_at: new Date().toISOString()
+        updatedAt: serverTimestamp()
       })
       router.refresh()
     } catch (error) {
@@ -71,13 +71,13 @@ export function FriendCard({ connection, currentUserId, type, onChat }: FriendCa
     <Card>
       <CardContent className="flex items-center gap-4 p-4">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={otherUser.avatar_url || undefined} alt={otherUser.display_name} />
-          <AvatarFallback>{otherUser.display_name?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+          <AvatarImage src={otherUser.avatarUrl || undefined} alt={otherUser.displayName} />
+          <AvatarFallback>{otherUser.displayName?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
         </Avatar>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium truncate">{otherUser.display_name}</h3>
+            <h3 className="font-medium truncate">{otherUser.displayName}</h3>
             {type === "accepted" && (
               <Badge variant="secondary" className="text-xs">
                 Friend
@@ -111,7 +111,7 @@ export function FriendCard({ connection, currentUserId, type, onChat }: FriendCa
           {type === "accepted" && (
             <>
               {onChat && (
-                <Button size="sm" variant="secondary" onClick={() => onChat(otherUser.id, otherUser.display_name)}>
+                <Button size="sm" variant="secondary" onClick={() => onChat(otherUser.id, otherUser.displayName)}>
                   <MessageCircle className="mr-1 h-4 w-4" />
                   Chat
                 </Button>

@@ -19,7 +19,7 @@ interface PublicProfileProps {
 }
 
 export function PublicProfile({ profile, links, isOwner }: PublicProfileProps) {
-  const theme = profile.theme_config || {}
+  const theme = profile.themeConfig || {}
   const hasTheme = Object.keys(theme).length > 0
 
   const containerStyle = hasTheme
@@ -31,9 +31,9 @@ export function PublicProfile({ profile, links, isOwner }: PublicProfileProps) {
 
   return (
     <div className="min-h-screen bg-background" style={containerStyle}>
-      {profile.cover_photo && (
+      {profile.coverPhoto && (
         <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
-          <img src={profile.cover_photo || "/placeholder.svg"} alt="Cover" className="h-full w-full object-cover" />
+          <img src={profile.coverPhoto || "/placeholder.svg"} alt="Cover" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80" />
         </div>
       )}
@@ -42,14 +42,14 @@ export function PublicProfile({ profile, links, isOwner }: PublicProfileProps) {
         <div className="space-y-12">
           <div className="flex flex-col items-center space-y-4 text-center">
             <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-              <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
+              <AvatarImage src={profile.avatarUrl || undefined} alt={profile.displayName} />
               <AvatarFallback className="text-4xl font-bold">
-                {profile.display_name.charAt(0).toUpperCase()}
+                {profile.displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
             <div className="space-y-2">
-              <h1 className="text-balance text-5xl font-extrabold tracking-tight">{profile.display_name}</h1>
+              <h1 className="text-balance text-5xl font-extrabold tracking-tight">{profile.displayName}</h1>
               <p className="text-lg text-muted-foreground font-medium">@{profile.nickname}</p>
               {profile.bio && <p className="mx-auto max-w-lg text-pretty text-lg leading-relaxed text-muted-foreground/80">{profile.bio}</p>}
             </div>
